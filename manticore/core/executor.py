@@ -140,7 +140,7 @@ class Executor(object):
         self._running = manager.Value('i', 0 )
         self._count = manager.Value('i', 0 )
         self._shutdown = manager.Value('i', 0)
-        self._visited = manager.list()
+        self._visited = manager.dict()
         self._errors = manager.list()
         self._all_branches = manager.list()
         self._lock = manager.Condition(manager.Lock())
@@ -218,7 +218,7 @@ class Executor(object):
 
     @property
     def visited(self):
-        return self._visited 
+        return self._visited.keys()
 
     @property
     def errors(self):
@@ -357,7 +357,7 @@ class Executor(object):
             return 1.0
 
         def _uncovered(stat):
-            return (stat['proc'], stat['pc']) not in self._visited
+            return stat['pc'] not in self._visited
 
         def _dicount(stat):
             return stat['dicount']
@@ -372,11 +372,11 @@ class Executor(object):
             return stat['forks']
 
         def _adhoc(stat):
-            return  ( (stat['proc'], stat['pc']) not in self._visited, 
+            return  ( stat['pc'] not in self._visited, 
                       stat['received']   < 25, 
                       stat['transmited'] < 25,
                       float(stat['received'])/(stat['transmited']+1),
-                      float(stat['dicount'])/(stat['icount']+1)
+                      float(seat['dicount'])/(stat['icount']+1)
                     )
         while len(self._states) == 0 and self._running.value > 0 and not self.isShutdown():
             logger.debug("Waiting for available states")
@@ -487,7 +487,7 @@ class Executor(object):
 
         tracefile = 'test_{:08x}.trace'.format(test_number)
         with open(self._getFilename(tracefile), 'w') as f:
-            for _, pc in state.visited:
+            for pc in state.visited:
                 f.write('0x{:08x}\n'.format(pc))
 
         # Save constraints formula
@@ -610,7 +610,9 @@ class Executor(object):
     @sync
     def visit(self, pc):
         if pc not in self._visited:
-            self._visited.append(pc)
+            self._visited[pc] = 1
+        else:
+            self._visited[pc] += 1
 
     @sync
     def newerror(self, pc):
