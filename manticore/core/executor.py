@@ -487,7 +487,7 @@ class Executor(object):
 
         tracefile = 'test_{:08x}.trace'.format(test_number)
         with open(self._getFilename(tracefile), 'w') as f:
-            for pc in state.visited:
+            for _, pc in state.visited:
                 f.write('0x{:08x}\n'.format(pc))
 
         # Save constraints formula
