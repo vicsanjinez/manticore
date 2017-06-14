@@ -85,11 +85,7 @@ class State(object):
 
     def execute(self):
         trace_item = (self.platform._current, self.cpu.PC)
-        try:
-            result = self.platform.execute()
-        except:
-            trace_item = None
-            raise
+        result = self.platform.execute()
         assert self.platform.constraints is self.constraints
         assert self.mem.constraints is self.constraints
         self.visited.add(trace_item)
